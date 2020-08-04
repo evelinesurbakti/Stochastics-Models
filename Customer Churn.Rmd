@@ -1,0 +1,66 @@
+---
+title: "Customer Churn"
+author: "Please see the pdf for the details"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(BDgraph)
+library(survival)
+data(churn)
+summary(churn)
+```
+
+The churn rate, also known as the rate of attrition or customer churn, is the rate at which customers stop doing business with an entity. It is most commonly expressed as the percentage of service subscribers who discontinue their subscriptions within a given time period
+
+The churn dataset contains the length of time the customer was with the com-
+pany (Account.Length), whether they churned (Churn) and a number
+of other covariates for 3333 customers.
+
+(a) Construct a Kaplan-Meier estimate of the survival function for
+time-to-churn and plot the estimate of the survival function.
+```{r}
+ # Fit Kaplan-Meier Curve
+churn$Churn=ifelse(churn$Churn=="True",1,0)
+
+# Set up Surv() object
+survdat <- Surv(time=churn[,2],event=churn[,20])
+
+# Fit the model to the data
+fit <- survfit(survdat~1,se=FALSE)
+#summary(fit)
+plot(fit, main= "Survival Function Estimation", xlab="Account Length", ylab="Rate")
+
+```
+
+(b) Estimate the median time-to-churn.
+```{r}
+#median
+print(fit)
+```
+
+(c) Use the Cox proportional hazards method to study the impact
+of the customer covariates on the time-to-churn and develop a
+parsimonious model.
+```{r}
+# Fit the Cox PH model to the data
+fit <- coxph(Surv(Account.Length,Churn)~.,data=churn)
+
+# Examine the fit
+summary(fit)
+```
+
+```{r}
+# Plot the baseline survival function
+library(ggplot2)
+library(survminer)
+survfit(fit) 
+```
+
+```{r}
+obj<-step(fit)
+summary(obj)
+```
