@@ -1,0 +1,165 @@
+---
+title: "Voting Data"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+_see the report for the details_
+
+```{r}
+#load bin.votes (the voting data)
+load("dailvotes.Rdata")
+str(votes)
+yes <- 1*(votes[,-(1:3)]=="y" )
+```
+
+```{r}
+library(BayesLCA)
+set.seed(1234)
+fit2 <- blca.em(yes, 2, restarts=25)
+summary(fit2)
+fit2
+plot(fit2)
+
+```
+
+```{r}
+fit3<- blca.em(yes, 3, restarts=25)
+summary(fit3)
+fit3
+plot(fit3)
+```
+
+```{r}
+fit4<- blca.em(yes, 4, restarts=25)
+summary(fit4)
+fit4
+plot(fit4)
+```
+
+```{r}
+fit5<- blca.em(yes, 5, restarts=25)
+summary(fit5)
+fit5
+plot(fit5)
+
+```
+
+```{r}
+fit6<- blca.em(yes, 6, restarts=25)
+summary(fit6)
+fit6
+plot(fit6)
+
+```
+
+```{r}
+fit7<- blca.em(yes, 7, restarts=25)
+summary(fit7)
+fit7
+plot(fit7)
+
+```
+
+```{r}
+fit8<- blca.em(yes, 8, restarts=25)
+summary(fit8)
+fit8
+plot(fit8)
+
+```
+
+```{r}
+fit9<- blca.em(yes, 9, restarts=25)
+summary(fit9)
+fit9
+plot(fit9)
+
+```
+
+```{r}
+fit10<- blca.em(yes, 10, restarts=25)
+summary(fit10)
+fit10
+plot(fit10)
+
+```
+
+```{r}
+K<- seq(2,10,1)
+
+BIC<-c(fit2$BIC,fit3$BIC,fit4$BIC,fit5$BIC,fit6$BIC,fit7$BIC,fit8$BIC,fit9$BIC,fit10$BIC)
+
+AIC<-c(fit2$AIC,fit3$AIC,fit4$AIC,fit5$AIC,fit6$AIC,fit7$AIC,fit8$AIC,fit9$AIC,fit10$AIC)
+
+plot(K,BIC, main = "Cluster's BIC", type = "l")
+plot(K,AIC, main = "Cluster's AIC", type = "l")
+
+```
+Then, after deciding on the number, you look at the results of this clustering, and describe the results - size of each cluster, characteristics of each cluster etc.
+
+```{r}
+z<-fit3$Z
+zr<-as.data.frame(round(z,1))
+pol<-votes[,1:3]
+library(dplyr)
+full<-bind_cols(pol,zr)
+g1<-full[full$`Group 1`==1,]
+g2<-full[full$`Group 2`==1,]
+g3<-full[full$`Group 3`==1,]
+
+x<-table(g1$Party)
+x
+pie(x,main = "Group 1")
+y<-table(g2$Party)
+y
+pie(y,main = "Group 2")
+z<-table(g3$Party)
+z
+pie(z,main = "Group 3")
+
+```
+
+```{r}
+z<-fit6$Z
+zr<-as.data.frame(round(z,1))
+pol<-votes[,1:3]
+library(dplyr)
+full<-bind_cols(pol,zr)
+g1<-full[full$`Group 1`==1,]
+g2<-full[full$`Group 2`==1,]
+g3<-full[full$`Group 3`==1,]
+g4<-full[full$`Group 4`==1,]
+g5<-full[full$`Group 5`==1,]
+g6<-full[full$`Group 6`==1,]
+
+x<-table(g1$Party)
+x
+pie(x,main = "Group 1")
+y<-table(g2$Party)
+y
+pie(y,main = "Group 2")
+z<-table(g3$Party)
+z
+pie(z,main = "Group 3")
+
+x1<-table(g4$Party)
+x1
+pie(x1,main = "Group 4")
+y1<-table(g5$Party)
+y1
+pie(y1,main = "Group 5")
+z1<-table(g6$Party)
+z1
+pie(z1,main = "Group 6")
+
+```
+
+
+
+
+
