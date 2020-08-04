@@ -1,0 +1,139 @@
+---
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Stochastic Models for the Number of Deaths in Game of Thrones Episodes
+
+Game of Thrones was a popular fantasy drama TV series known for its level
+of violence. The provided dataset recording the number of deaths per episode for 60 episodes. The data recorded are as follows:
+
+```{r, include=FALSE}
+data = read.csv("GOT.csv")
+knitr::kable(data)
+```
+
+1(a) Fit the Poisson model to the data using maximum likelihood.
+
+```{r, include=FALSE}
+x<-c(0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 10,11, 11)
+```
+x<-scan()
+0 0 0 0
+1 1 1 1 1 1 1 1 1 1 1
+2 2 2 2 2 2 2 2 2 2 2 2 2
+3 3 3 3 3 3 3
+4 4 4 4 4 4 4 4 4 4 4
+5 5 5 5 5
+6 6 6 6 6
+7
+10
+11 11
+
+```{r}
+#fitting the Poisson model to the data using maximum likelihood
+loglikelihoodpoisson<-function(lambda,x)
+{
+  sum(dpois(x,lambda,log=TRUE))}
+
+mean(x)
+
+#set initial lambda into 3 to reach converge faster
+lambda0<-3
+
+fit0<-optim(par=lambda0,loglikelihoodpoisson,method="BFGS",x=x,control=list(fnscale=-1),hessian=TRUE)
+
+fit0
+```
+
+(b) Fit the Poisson-Gamma model using maximum likelihood.
+```{r}
+# Get log likelihood of the possion-gamma distribution
+dPoissonGamma <- function(x,alpha,beta,log=TRUE)
+{
+  if (log)
+  {
+    lognumer <- lgamma(x+alpha)+x*log(beta)
+    logdenom <- lgamma(alpha)+(alpha+x)*log(1+beta)+lgamma(x+1)
+    res <- lognumer-logdenom
+  }else
+  {
+    numer <- gamma(x+alpha)*beta^x
+    denom <- gamma(alpha)*(1+beta)^(alpha+x)*gamma(x+1)
+    res <- numer/denom
+  }
+  res
+}
+
+loglikelihoodpoissonGamma<-function(theta,x)
+{
+  alpha<-theta[1]
+  beta<-theta[2]
+  sum(dPoissonGamma(x,alpha,beta,log=TRUE))}
+
+alpha0<- 1
+beta0<- mean(x)
+theta0<-c(alpha0,beta0)
+
+fit<-optim(par=theta0,loglikelihoodpoissonGamma,method="BFGS",x=x,control=list(fnscale=-1),hessian=TRUE)
+
+#ignore the "NaNs producedNaNs producedNaNs produced$par"
+fit
+```
+
+(c) Actually both distributions are giving a good representation of the data. However, poisson-gamma is a better model for the data compares to the poisson. Here we will see how well the data meets the assumptions of the model, by graphing the data.
+
+In the beginning, the probability is quite high, poisson can detect this and get a higher position of line at the start, but it seems to continue increasing. Meanwhile poisson-gamma adapts well with the data and takes the lower start while moving smoother than poisson.
+
+```{r}
+hist(x, probability = TRUE, xlab = "Number of Deaths", ylim= c(0,0.30), col="darkolivegreen2", xlim = c(0,12), main = "Number of Deaths in Game of Thrones Episodes", breaks = 12)
+points(x, dpois(x,fit0$par), type="l", col="black")
+points(x, dPoissonGamma(x,fit$par[1],fit$par[2],F), type="l", col="red")
+legend("right", legend=c("Poisson","Poisson-Gamma"),col= c("black","red"),lty = c(1,1),cex=0.7,bty="n")
+```
+
+(d) AIC and BIC for assessing the fit of the models to the data
+In general, we can add more parameters to improve the model, but as the parsimony is still the main idea of fitting the model, AIC and BIC are the best way to assess the goodness of fit since they penalized-likelihood criteria. 
+
+Since we had fitted the models with maximum likelihood, the models can be compared using the results and the number of parameters. We need to balance the quality of fit and model complexity to find the simplest model which gives a good fit, to void overfitting the data.
+
+From the table below, Poisson model has the highest likelihood. 
+```{r}
+n=60
+AIC0<-(2*fit0$value)-(2*1)
+BIC0<-(2*fit0$value)-(log(n)*1)
+AIC1<-(2*fit$value)-(2*2)
+BIC1<-(2*fit$value)-(log(n)*2)
+
+d <- cbind(Model = c("Poisson","Poisson-Gamma"), 
+           AIC = c(round(AIC0,2),round(AIC1,2)),
+           BIC=c(round(BIC0,2),round(BIC1,2)))
+  
+knitr::kable(d)
+```
+
+```{r}
+inf0<- -fit0$hessian
+SE0 = sqrt(diag(solve(inf0))) #second derivatives
+SE0
+
+inf1<- -fit$hessian
+SE1= sqrt(diag(solve(inf1))) #second derivatives
+SE1
+
+fit0$par[1] + 1.96*SE0
+fit0$par[1] - 1.96*SE0
+
+fit$par[1] + 1.96*SE1[1]
+fit$par[1] - 1.96*SE1[1]
+
+fit$par[2] + 1.96*SE1[2]
+fit$par[2] - 1.96*SE1[2]
+
+```
+
